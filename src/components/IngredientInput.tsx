@@ -1,53 +1,66 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { useState, KeyboardEvent } from 'react';
+import { X, Plus } from 'lucide-react';
 
 interface IngredientInputProps {
-  onIngredientsChange: (ingredients: string[]) => void;
+  ingredients: string[];
+  onChange: (ingredients: string[]) => void;
+  disabled?: boolean;
 }
 
-export function IngredientInput({ onIngredientsChange }: IngredientInputProps) {
-  const [ingredients, setIngredients] = useState<string[]>([]);
-  const [currentInput, setCurrentInput] = useState('');
+export default function IngredientInput({ 
+  ingredients, 
+  onChange,
+  disabled = false 
+}: IngredientInputProps) {
+  const [input, setInput] = useState('');
 
-  const addIngredient = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentInput.trim()) {
-      const newIngredients = [...ingredients, currentInput.trim()];
-      setIngredients(newIngredients);
-      onIngredientsChange(newIngredients);
-      setCurrentInput('');
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && input.trim() && !disabled) {
+      const newIngredients = [...ingredients, input.trim()];
+      onChange(newIngredients);
+      setInput('');
     }
   };
 
-  const removeIngredient = (index: number) => {
-    const newIngredients = ingredients.filter((_, i) => i !== index);
-    setIngredients(newIngredients);
-    onIngredientsChange(newIngredients);
+  const removeIngredient = (indexToRemove: number) => {
+    if (!disabled) {
+      onChange(ingredients.filter((_, index) => index !== indexToRemove));
+    }
   };
 
   return (
-    <div className="w-full max-w-2xl">
-      <form onSubmit={addIngredient} className="mb-4">
+    <div className="space-y-4">
+      <div className="relative">
         <input
           type="text"
-          value={currentInput}
-          onChange={(e) => setCurrentInput(e.target.value)}
-          placeholder="Enter an ingredient..."
-          className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 rounded-xl border-2 border-violet-200 focus:border-violet-500 
+          focus:ring focus:ring-violet-200 focus:ring-opacity-50 transition-all duration-300
+          disabled:bg-gray-50 disabled:cursor-not-allowed pl-12"
+          placeholder="Add ingredients and press Enter..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={disabled}
         />
-      </form>
+        <Plus className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-violet-400" />
+      </div>
+
       <div className="flex flex-wrap gap-2">
         {ingredients.map((ingredient, index) => (
           <span
             key={index}
-            className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium
+            bg-gradient-to-r from-violet-100 to-pink-100 text-gray-700 group hover:from-violet-200 
+            hover:to-pink-200 transition-all duration-300"
           >
             {ingredient}
             <button
+              type="button"
+              className="ml-1 p-0.5 rounded-full hover:bg-violet-200 transition-colors"
               onClick={() => removeIngredient(index)}
-              className="ml-2 focus:outline-none"
+              disabled={disabled}
             >
-              <X size={14} />
+              <X className="h-3.5 w-3.5 text-violet-700" />
             </button>
           </span>
         ))}
